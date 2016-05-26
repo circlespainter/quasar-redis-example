@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-`make test` will run the tests, a get/set example and a pub-sub one.
+Redis and `make` must be installed to run the tests. `make test` will run a get/set example and a pub-sub one.
 
 ## Quasar and Redis integration
 
