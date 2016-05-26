@@ -1,0 +1,79 @@
+apply plugin: 'java'
+
+group               = 'testgrp'
+version             = '0.2.0'
+status              = 'integration'
+description         = 'TODO - Pls. edit - Gradle bootstrap project for Quasar'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext.quasarVer       = '0.7.6-SNAPSHOT'
+ext.comsatVer       = '0.7.1-SNAPSHOT'
+ext.junitVer        = '4.12'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+configurations {
+    quasar
+}
+
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
+
+        force "com.google.guava:guava:19.0"
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+//    maven { url "https://oss.sonatype.org/content/repositories/releases" }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+//    maven { url 'https://maven.java.net/content/repositories/snapshots' }
+}
+
+dependencies {
+    compile "co.paralleluniverse:quasar-core:${quasarVer}:jdk8"
+    compile "co.paralleluniverse:comsat-redis:${comsatVer}"
+
+    quasar "co.paralleluniverse:quasar-core:${quasarVer}:jdk8@jar"
+
+    testCompile "junit:junit:$junitVer"
+}
+
+test {
+    beforeTest { desc ->
+        logger.quiet("Running test: " + desc)
+    }
+
+    afterTest { desc, result ->
+        if(result.resultType == TestResult.ResultType.FAILURE) {
+            logger.quiet("Failed test ${desc.name} [${desc.className}] with exception: ${result.exception}")
+            if(result.exception != null) {
+                result.exception.printStackTrace()
+            }
+        }
+    }
+}
+
+tasks.withType(Test) {
+    useJUnit()
+    // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
+
+    jvmArgs "-Xmx2048m"
+    doLast() {
+        println "file://" + getReports().getHtml().getDestination() + "/index.html"
+    }
+}
+
+tasks.withType(Test) {
+    jvmArgs "-javaagent:${configurations.quasar.singleFile}" // =v, =d
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13'
+}
+
+defaultTasks 'test'
